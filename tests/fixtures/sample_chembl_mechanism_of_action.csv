@@ -1,0 +1,10 @@
+molregno,tid,action_type,mechanism_of_action,disease_effector,max_phase
+25,240,inhibitor,irreversible acetylation of serine 530,Myocardial Infarction,4
+25,240,inhibitor,irreversible acetylation of serine 530,Stroke,4
+132,3150,inhibitor,competitive PDE5A inhibition,Alzheimer Disease,4
+1100,4200,activator,AMPK activation via LKB1,Alzheimer Disease,4
+152,241,inhibitor,selective COX-2 inhibition,Osteoarthritis,4
+118,241,inhibitor,selective COX-2 inhibition,Osteoarthritis,4
+382,5600,modulator,CRBN binding and E3 ligase modulation,Multiple Myeloma,4
+2103798,5600,modulator,CRBN binding and E3 ligase modulation,Multiple Myeloma,4
+1198,5600,modulator,CRBN binding and E3 ligase modulation,Multiple Myeloma,4

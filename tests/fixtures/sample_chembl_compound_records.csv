@@ -1,0 +1,9 @@
+molregno,chembl_id,pref_name,molecule_type
+25,CHEMBL25,Aspirin,Small molecule
+132,CHEMBL132,Sildenafil,Small molecule
+1100,CHEMBL1100,Metformin,Small molecule
+152,CHEMBL152,Rofecoxib,Small molecule
+118,CHEMBL118,Celecoxib,Small molecule
+382,CHEMBL382,Thalidomide,Small molecule
+2103798,CHEMBL2103798,Pomalidomide,Small molecule
+1198,CHEMBL1198,Lenalidomide,Small molecule

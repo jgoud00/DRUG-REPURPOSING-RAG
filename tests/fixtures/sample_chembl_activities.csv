@@ -1,0 +1,11 @@
+activity_id,assay_id,molregno,standard_type,standard_value,standard_units,standard_relation,confidence_score,curated_by,tid
+1,CHEMBL123,25,IC50,1.5,nM,=,9,chembl_curator,240
+2,CHEMBL124,25,IC50,250,nM,=,8,chembl_curator,240
+3,CHEMBL125,132,IC50,45,nM,=,7,chembl_curator,3150
+4,CHEMBL126,1100,IC50,850,nM,=,6,chembl_curator,4200
+5,CHEMBL127,152,IC50,0.04,μM,=,9,chembl_curator,241
+6,CHEMBL128,118,IC50,0.08,μM,=,8,chembl_curator,241
+7,CHEMBL129,382,EC50,120,nM,=,7,chembl_curator,5600
+8,CHEMBL130,2103798,EC50,5,nM,=,9,chembl_curator,5600
+9,CHEMBL131,1198,EC50,8,nM,=,8,chembl_curator,5600
+10,CHEMBL132,25,Ki,0.5,nM,=,9,chembl_curator,240

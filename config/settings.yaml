@@ -1,0 +1,199 @@
+# Central configuration for Drug Repurposing RAG Engine
+
+# =============================================================================
+# PATHS
+# =============================================================================
+paths:
+  project_root: "."
+  data_raw: "data/raw"
+  data_processed: "data/processed"
+  data_embeddings: "data/embeddings"
+  pubmed_raw: "data/raw/pubmed"
+  chembl_raw: "data/raw/chembl"
+  drugbank_raw: "data/raw/drugbank"
+  abstracts_processed: "data/processed/abstracts"
+  interactions_processed: "data/processed/interactions"
+  unified_corpus: "data/processed/unified"
+  vector_store: "data/embeddings/chromadb"
+  logs: "logs"
+  cache: ".cache"
+
+# =============================================================================
+# EMBEDDING MODEL CONFIGURATION
+# =============================================================================
+embedding:
+  model_name: "pritamdeka/S-PubMedBert-MS-MARCO"
+  model_dim: 768
+  device: "auto"  # auto, cuda, cpu
+  batch_size: 32
+  max_length: 512
+  normalize_embeddings: true
+  use_fp16: true
+  cache_dir: ".cache/huggingface"
+
+# Alternative models (for experimentation)
+alternative_models:
+  bge_small: "BAAI/bge-small-en-v1.5"
+  pubmedbert: "microsoft/BiomedNLP-PubMedBERT-base-uncased-abstract"
+  sapbert: "cambridgeltl/SapBERT-from-PubMedBERT-fulltext"
+  biolinkbert_base: "michiyasunaga/BioLinkBERT-base"
+  biolinkbert_large: "michiyasunaga/BioLinkBERT-large"
+
+# =============================================================================
+# VECTOR STORE CONFIGURATION
+# =============================================================================
+vector_store:
+  dense:
+    type: "chromadb"
+    persist_directory: "data/embeddings/chromadb"
+    collection_name: "drug_repurposing"
+    distance_metric: "cosine"
+    hnsw_space: "cosine"
+    hnsw_construction_ef: 200
+    hnsw_search_ef: 100
+    hnsw_m: 16
+  sparse:
+    type: "rank_bm25"
+    persist_path: "data/embeddings/bm25_index.pkl"
+    algorithm: "BM25Okapi"
+    k1: 1.2
+    b: 0.75
+  hybrid:
+    dense_weight: 0.7
+    sparse_weight: 0.3
+    fusion_method: "rrf"
+    rrf_k: 60
+
+# =============================================================================
+# CHUNKING CONFIGURATION
+# =============================================================================
+chunking:
+  # PubMed abstracts
+  abstract_chunk_size: 256
+  abstract_chunk_overlap: 50
+  abstract_min_chunk_size: 50
+  use_semantic_chunking: true
+  sentence_splitter: "en_core_sci_sm"
+
+  # Structured data (ChEMBL/DrugBank)
+  structured_template: "{drug_name} ({drug_id}) {action_type} {target_name} ({target_uniprot}) implicated in {disease_name} via {mechanism}. Pathways: {pathway_names}."
+  include_row_level: true
+  include_entity_summaries: true
+  serialize_lists_as_csv: true  # ChromaDB metadata cannot contain lists
+
+# =============================================================================
+# RETRIEVAL CONFIGURATION
+# =============================================================================
+retrieval:
+  hybrid:
+    dense_weight: 0.7
+    sparse_weight: 0.3
+    fusion_method: "rrf"  # rrf, linear
+    rrf_k: 60
+  top_k_initial: 50
+  top_k_final: 10
+  metadata_filters: {}
+
+# =============================================================================
+# RERANKING CONFIGURATION
+# =============================================================================
+reranking:
+  enabled: true
+  model_name: "cross-encoder/ms-marco-MiniLM-L-6-v2"
+  # Alternative biomedical cross-encoders:
+  # "amberoad/bert-multilingual-passage-reranking-msmarco"
+  # Fine-tuned on BioASQ: "your-org/biobert-crossencoder-msmarco"
+  batch_size: 16
+  max_length: 512
+  top_k: 10
+
+# =============================================================================
+# PATHWAY LINKER CONFIGURATION
+# =============================================================================
+pathway_linker:
+  enabled: true
+  pathway_sources: ["reactome"]
+  reactome:
+    base_url: "https://reactome.org/ContentService"
+    cache_ttl_hours: 168
+  disease_pathway_map: "config/disease_pathway_map.tsv"
+  min_shared_pathways: 1
+  confidence_threshold: 0.5
+
+# =============================================================================
+# GENERATION CONFIGURATION
+# =============================================================================
+generation:
+  llm:
+    provider: "ollama"
+    model: "llama3.1:8b"
+    base_url: "http://localhost:11434"
+    temperature: 0.1
+    max_tokens: 2048
+    top_p: 0.9
+    repeat_penalty: 1.1
+    # OpenAI-compatible fallback
+    openai_fallback:
+      enabled: true
+      api_key_env: "OPENAI_API_KEY"
+      base_url: "https://api.openai.com/v1"
+      model: "gpt-4o-mini"
+  prompt:
+    system_template: "config/prompts/system.txt"
+    user_template: "config/prompts/user.txt"
+    citation_format: "[{doc_id}]"
+    require_citations: true
+    max_context_chunks: 8
+
+# =============================================================================
+# EVALUATION CONFIGURATION
+# =============================================================================
+evaluation:
+  benchmarks:
+    - "repo_db"
+    - "drugcentral"
+    - "custom_cases"
+  metrics:
+    - "recall_at_k"
+    - "mrr"
+    - "ndcg"
+    - "citation_precision"
+    - "hallucination_rate"
+  k_values: [1, 3, 5, 10]
+  entailment_model: "microsoft/BiomedNLI"
+
+# =============================================================================
+# INGESTION CONFIGURATION
+# =============================================================================
+ingestion:
+  pubmed:
+    batch_size: 1000
+    max_abstracts: null  # null = all
+    required_fields: ["pmid", "title", "abstract"]
+    mesh_terms: true
+  chembl:
+    version: "33"
+    batch_size: 5000
+    tables:
+      - "activities"
+      - "target_dictionary"
+      - "compound_records"
+      - "mechanism_of_action"
+      - "target_components"
+    confidence_threshold: 5  # ChEMBL confidence_score >= 5
+  drugbank:
+    enabled: false
+    version: "5.1.11"
+  entity_linking:
+    enabled: false  # Disabled for MVP - use MeSH/regex only
+    model: "en_core_sci_sm"
+
+# =============================================================================
+# LOGGING
+# =============================================================================
+logging:
+  level: "INFO"
+  format: "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s"
+  file: "logs/rag_engine.log"
+  max_bytes: 10485760
+  backup_count: 5

@@ -1,0 +1,316 @@
+<?xml version="1.0"?>
+<!DOCTYPE PubmedArticleSet PUBLIC "-//NLM//DTD PubMedArticle, 1 January 2019//EN" "https://dtd.nlm.nih.gov/ncbi/pubmed/out/pubmed_190101.dtd">
+<PubmedArticleSet>
+  <PubmedArticle>
+    <MedlineCitation Status="MEDLINE" Owner="NLM">
+      <PMID>38412345</PMID>
+      <Article PubModel="Print-Electronic">
+        <Journal>
+          <ISSN IssnType="Electronic">1524-4636</ISSN>
+          <JournalIssue CitedMedium="Internet">
+            <Volume>145</Volume>
+            <Issue>3</Issue>
+            <PubDate>
+              <Year>2024</Year>
+              <Month>Mar</Month>
+            </PubDate>
+          </JournalIssue>
+          <Title>Arteriosclerosis, thrombosis, and vascular biology</Title>
+        </Journal>
+        <ArticleTitle>Aspirin resistance and cardiovascular outcomes in diabetes mellitus</ArticleTitle>
+        <Pagination>
+          <MedlinePgn>456-465</MedlinePgn>
+        </Pagination>
+        <ELocationID EIdType="doi" ValidYN="Y">10.1161/ATVBAHA.123.318456</ELocationID>
+        <Abstract>
+          <AbstractText Label="BACKGROUND">Aspirin resistance is associated with adverse cardiovascular outcomes in patients with diabetes mellitus.</AbstractText>
+          <AbstractText Label="METHODS">We studied 500 diabetic patients on aspirin therapy. Platelet function was measured by VerifyNow assay. COX-1 and COX-2 expression was analyzed.</AbstractText>
+          <AbstractText Label="RESULTS">Aspirin resistance (ARU > 550) was found in 28% of patients. High COX-1 expression correlated with resistance (p&lt;0.001). EGFR signaling was upregulated in resistant patients.</AbstractText>
+          <AbstractText Label="CONCLUSIONS">COX-1 overexpression and EGFR pathway activation contribute to aspirin resistance in diabetes.</AbstractText>
+        </Abstract>
+        <AuthorList CompleteYN="Y">
+          <Author>
+            <LastName>Smith</LastName>
+            <ForeName>John</ForeName>
+          </Author>
+          <Author>
+            <LastName>Jones</LastName>
+            <ForeName>Mary</ForeName>
+          </Author>
+        </AuthorList>
+        <Language>eng</Language>
+        <PublicationTypeList>
+          <PublicationType>Journal Article</PublicationType>
+        </PublicationTypeList>
+        <ArticleIdList>
+          <ArticleId IdType="pubmed">38412345</ArticleId>
+          <ArticleId IdType="doi">10.1161/ATVBAHA.123.318456</ArticleId>
+        </ArticleIdList>
+      </Article>
+      <MeshHeadingList>
+        <MeshHeading>
+          <DescriptorName>Acetylsalicylic Acid</DescriptorName>
+        </MeshHeading>
+        <MeshHeading>
+          <DescriptorName>Diabetes Mellitus</DescriptorName>
+        </MeshHeading>
+        <MeshHeading>
+          <DescriptorName>COX-1</DescriptorName>
+        </MeshHeading>
+        <MeshHeading>
+          <DescriptorName>EGFR</DescriptorName>
+        </MeshHeading>
+        <MeshHeading>
+          <DescriptorName>Cardiovascular Diseases</DescriptorName>
+        </MeshHeading>
+      </MeshHeadingList>
+    </MedlineCitation>
+  </PubmedArticle>
+
+  <PubmedArticle>
+    <MedlineCitation Status="MEDLINE" Owner="NLM">
+      <PMID>38412346</PMID>
+      <Article PubModel="Print-Electronic">
+        <Journal>
+          <ISSN IssnType="Electronic">1476-5594</ISSN>
+          <JournalIssue CitedMedium="Internet">
+            <Volume>25</Volume>
+            <Issue>2</Issue>
+            <PubDate>
+              <Year>2024</Year>
+              <Month>Feb</Month>
+            </PubDate>
+          </JournalIssue>
+          <Title>Nature reviews. Drug discovery</Title>
+        </Journal>
+        <ArticleTitle>Drug repurposing for Alzheimer's disease: targeting amyloid beta and tau</ArticleTitle>
+        <Pagination>
+          <MedlinePgn>123-140</MedlinePgn>
+        </Pagination>
+        <ELocationID EIdType="doi" ValidYN="Y">10.1038/s41573-023-00892-1</ELocationID>
+        <Abstract>
+          <AbstractText Label="BACKGROUND">Alzheimer's disease (AD) lacks disease-modifying treatments. Repurposing approved drugs offers a faster path to clinic.</AbstractText>
+          <AbstractText Label="APPROACH">We screened 1,200 approved compounds for amyloid beta (Aβ) aggregation inhibition. BACE1 and APP processing were assessed in neuronal cultures.</AbstractText>
+          <AbstractText Label="FINDINGS">Sildenafil (CHEMBL132) reduced Aβ42 by 45% via PDE5A inhibition. Metformin (CHEMBL1100) decreased tau phosphorylation through AMPK activation. Both compounds cross the blood-brain barrier.</AbstractText>
+          <AbstractText Label="IMPLICATIONS">PDE5A and AMPK represent promising targets for AD drug repurposing.</AbstractText>
+        </Abstract>
+        <AuthorList CompleteYN="Y">
+          <Author>
+            <LastName>Williams</LastName>
+            <ForeName>Robert</ForeName>
+          </Author>
+        </AuthorList>
+        <Language>eng</Language>
+        <PublicationTypeList>
+          <PublicationType>Review</PublicationType>
+        </PublicationTypeList>
+        <ArticleIdList>
+          <ArticleId IdType="pubmed">38412346</ArticleId>
+          <ArticleId IdType="doi">10.1038/s41573-023-00892-1</ArticleId>
+        </ArticleIdList>
+      </Article>
+      <MeshHeadingList>
+        <MeshHeading>
+          <DescriptorName>Alzheimer Disease</DescriptorName>
+        </MeshHeading>
+        <MeshHeading>
+          <DescriptorName>Amyloid beta-Peptides</DescriptorName>
+        </MeshHeading>
+        <MeshHeading>
+          <DescriptorName>BACE1</DescriptorName>
+        </MeshHeading>
+        <MeshHeading>
+          <DescriptorName>Sildenafil</DescriptorName>
+        </MeshHeading>
+        <MeshHeading>
+          <DescriptorName>Metformin</DescriptorName>
+        </MeshHeading>
+        <MeshHeading>
+          <DescriptorName>Drug Repositioning</DescriptorName>
+        </MeshHeading>
+      </MeshHeadingList>
+    </MedlineCitation>
+  </PubmedArticle>
+
+  <PubmedArticle>
+    <MedlineCitation Status="MEDLINE" Owner="NLM">
+      <PMID>38412347</PMID>
+      <Article PubModel="Print-Electronic">
+        <Journal>
+          <ISSN IssnType="Electronic">1538-3636</ISSN>
+          <JournalIssue CitedMedium="Internet">
+            <Volume>62</Volume>
+            <Issue>4</Issue>
+            <PubDate>
+              <Year>2024</Year>
+              <Month>Apr</Month>
+            </PubDate>
+          </JournalIssue>
+          <Title>Journal of medicinal chemistry</Title>
+        </Journal>
+        <ArticleTitle>COX-2 selective inhibitors and cardiovascular risk: a mechanistic review</ArticleTitle>
+        <Pagination>
+          <MedlinePgn>2100-2115</MedlinePgn>
+        </Pagination>
+        <ELocationID EIdType="doi" ValidYN="Y">10.1021/acs.jmedchem.3c01234</ELocationID>
+        <Abstract>
+          <AbstractText>COX-2 selective inhibitors (coxibs) were developed to reduce gastrointestinal toxicity of traditional NSAIDs. However, rofecoxib (CHEMBL152) withdrawal highlighted cardiovascular risks. Celecoxib (CHEMBL118) shows dose-dependent risk. The mechanism involves prostacyclin (PGI2) suppression without affecting thromboxane A2, creating prothrombotic state. TP53 and EGFR pathways modulate this effect.</AbstractText>
+        </Abstract>
+        <AuthorList CompleteYN="Y">
+          <Author>
+            <LastName>Brown</LastName>
+            <ForeName>Alice</ForeName>
+          </Author>
+        </AuthorList>
+        <Language>eng</Language>
+        <PublicationTypeList>
+          <PublicationType>Review</PublicationType>
+        </PublicationTypeList>
+        <ArticleIdList>
+          <ArticleId IdType="pubmed">38412347</ArticleId>
+          <ArticleId IdType="doi">10.1021/acs.jmedchem.3c01234</ArticleId>
+        </ArticleIdList>
+      </Article>
+      <MeshHeadingList>
+        <MeshHeading>
+          <DescriptorName>Cyclooxygenase 2 Inhibitors</DescriptorName>
+        </MeshHeading>
+        <MeshHeading>
+          <DescriptorName>Cardiovascular Diseases</DescriptorName>
+        </MeshHeading>
+        <MeshHeading>
+          <DescriptorName>Rofecoxib</DescriptorName>
+        </MeshHeading>
+        <MeshHeading>
+          <DescriptorName>Celecoxib</DescriptorName>
+        </MeshHeading>
+        <MeshHeading>
+          <DescriptorName>TP53</DescriptorName>
+        </MeshHeading>
+        <MeshHeading>
+          <DescriptorName>EGFR</DescriptorName>
+        </MeshHeading>
+      </MeshHeadingList>
+    </MedlineCitation>
+  </PubmedArticle>
+
+  <PubmedArticle>
+    <MedlineCitation Status="MEDLINE" Owner="NLM">
+      <PMID>38412348</PMID>
+      <Article PubModel="Print-Electronic">
+        <Journal>
+          <ISSN IssnType="Electronic">1097-4164</ISSN>
+          <JournalIssue CitedMedium="Internet">
+            <Volume>45</Volume>
+            <Issue>1</Issue>
+            <PubDate>
+              <Year>2024</Year>
+              <Month>Jan</Month>
+            </PubDate>
+          </JournalIssue>
+          <Title>Molecular pharmacology</Title>
+        </Journal>
+        <ArticleTitle>Metformin activates AMPK in neurons: implications for neurodegenerative diseases</ArticleTitle>
+        <Pagination>
+          <MedlinePgn>45-56</MedlinePgn>
+        </Pagination>
+        <ELocationID EIdType="doi" ValidYN="Y">10.1124/molpharm.123.000456</ELocationID>
+        <Abstract>
+          <AbstractText Label="BACKGROUND">Metformin (CHEMBL1100) is a first-line diabetes drug with emerging neuroprotective effects.</AbstractText>
+          <AbstractText Label="METHODS">Primary cortical neurons treated with metformin. AMPK phosphorylation, mTOR signaling, and autophagy markers measured.</AbstractText>
+          <AbstractText Label="RESULTS">Metformin (10 μM) increased p-AMPK by 3.2-fold, inhibited mTOR, and enhanced autophagy. Effects blocked by Compound C (AMPK inhibitor). APP processing shifted away from amyloidogenic pathway.</AbstractText>
+          <AbstractText Label="CONCLUSIONS">Metformin's neuroprotection is AMPK-dependent and reduces amyloidogenic processing.</AbstractText>
+        </Abstract>
+        <AuthorList CompleteYN="Y">
+          <Author>
+            <LastName>Davis</LastName>
+            <ForeName>Emily</ForeName>
+          </Author>
+        </AuthorList>
+        <Language>eng</Language>
+        <PublicationTypeList>
+          <PublicationType>Journal Article</PublicationType>
+        </PublicationTypeList>
+        <ArticleIdList>
+          <ArticleId IdType="pubmed">38412348</ArticleId>
+          <ArticleId IdType="doi">10.1124/molpharm.123.000456</ArticleId>
+        </ArticleIdList>
+      </Article>
+      <MeshHeadingList>
+        <MeshHeading>
+          <DescriptorName>Metformin</DescriptorName>
+        </MeshHeading>
+        <MeshHeading>
+          <DescriptorName>AMPK</DescriptorName>
+        </MeshHeading>
+        <MeshHeading>
+          <DescriptorName>Autophagy</DescriptorName>
+        </MeshHeading>
+        <MeshHeading>
+          <DescriptorName>Alzheimer Disease</DescriptorName>
+        </MeshHeading>
+        <MeshHeading>
+          <DescriptorName>APP</DescriptorName>
+        </MeshHeading>
+      </MeshHeadingList>
+    </MedlineCitation>
+  </PubmedArticle>
+
+  <PubmedArticle>
+    <MedlineCitation Status="MEDLINE" Owner="NLM">
+      <PMID>38412349</PMID>
+      <Article PubModel="Print-Electronic">
+        <Journal>
+          <ISSN IssnType="Electronic">1522-9645</ISSN>
+          <JournalIssue CitedMedium="Internet">
+            <Volume>45</Volume>
+            <Issue>10</Issue>
+            <PubDate>
+              <Year>2024</Year>
+              <Month>May</Month>
+            </PubDate>
+          </JournalIssue>
+          <Title>European heart journal</Title>
+        </Journal>
+        <ArticleTitle>Thalidomide for multiple myeloma: from teratogen to targeted therapy</ArticleTitle>
+        <Pagination>
+          <MedlinePgn>890-898</MedlinePgn>
+        </Pagination>
+        <ELocationID EIdType="doi" ValidYN="Y">10.1093/eurheartj/ehae123</ELocationID>
+        <Abstract>
+          <AbstractText Label="HISTORICAL CONTEXT">Thalidomide (CHEMBL382) was withdrawn in 1961 for teratogenicity. Rediscovered for leprosy and multiple myeloma.</AbstractText>
+          <AbstractText Label="MECHANISM">Thalidomide binds CRBN (cereblon), modulating E3 ubiquitin ligase activity. This degrades IKZF1/3 transcription factors, killing myeloma cells. Also inhibits TNF-alpha and angiogenesis via VEGF suppression.</AbstractText>
+          <AbstractText Label="CLINICAL USE">Now standard in multiple myeloma regimens. Pomalidomide (CHEMBL2103798) and lenalidomide (CHEMBL1198) are derivatives with improved safety.</AbstractText>
+        </Abstract>
+        <AuthorList CompleteYN="Y">
+          <Author>
+            <LastName>Wilson</LastName>
+            <ForeName>James</ForeName>
+          </Author>
+        </AuthorList>
+        <Language>eng</Language>
+        <PublicationTypeList>
+          <PublicationType>Review</PublicationType>
+        </PublicationTypeList>
+        <ArticleIdList>
+          <ArticleId IdType="pubmed">38412349</ArticleId>
+          <ArticleId IdType="doi">10.1093/eurheartj/ehae123</ArticleId>
+        </ArticleIdList>
+      </Article>
+      <MeshHeadingList>
+        <MeshHeading>
+          <DescriptorName>Thalidomide</DescriptorName>
+        </MeshHeading>
+        <MeshHeading>
+          <DescriptorName>Multiple Myeloma</DescriptorName>
+        </MeshHeading>
+        <MeshHeading>
+          <DescriptorName>Cereblon</DescriptorName>
+        </MeshHeading>
+        <MeshHeading>
+          <DescriptorName>Drug Repositioning</DescriptorName>
+        </MeshHeading>
+      </MeshHeadingList>
+    </MedlineCitation>
+  </PubmedArticle>
+</PubmedArticleSet>

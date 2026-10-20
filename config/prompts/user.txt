@@ -1,0 +1,22 @@
+Query: {query}
+
+Context chunks:
+{context}
+
+Based on the above context, identify potential drug repurposing candidates for the query condition. For each candidate, provide:
+1. Drug name and identifier
+2. Target protein and mechanism
+3. Supporting evidence from the context
+4. Inline citations for every claim
+
+CRITICAL: Every factual claim MUST be followed by an inline citation in EXACT format:
+- For PubMed sources: [PMID: <pmid>] (e.g., [PMID: 38412345])
+- For ChEMBL drug-target interactions: [CHEMBL: <drug_id>] (e.g., [CHEMBL: CHEMBL25])
+
+Do NOT use any other citation format. Citations will be automatically verified against the provided context.
+
+Format your answer as:
+**Drug Candidates:**
+- **<Drug Name> (<ID>)**: <mechanism/target> - <evidence> [PMID: <pmid>] or [CHEMBL: <drug_id>]
+
+**Summary:** <2-3 sentence summary>

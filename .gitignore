@@ -1,0 +1,84 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+.tox/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+venv/
+env/
+.env
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
+.env
+.env.local
+.env.*.local
+*.log
+logs/
+
+# Data directories
+data/raw/
+data/processed/
+data/embeddings/
+data/embeddings/chromadb/
+data/embeddings/bm25_index.pkl
+
+# Model cache
+.cache/
+.huggingface/
+.cache/huggingface/
+sentence-transformers/
+
+# Test outputs
+tests/output/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Distribution
+dist/
+build/
+*.egg-info/
+
+# Secrets
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+*secret*
+*credential*
+*password*
+*token*
+
+# Large files
+*.npy
+*.pkl
+*.bin
+*.onnx
+*.pt
+*.pth
+*.safetensors
+
+# IDE/Editor specific
+*.swp
+*.swo
+.vscode/settings.json
+.vscode/launch.json

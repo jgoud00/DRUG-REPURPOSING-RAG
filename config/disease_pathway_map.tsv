@@ -1,0 +1,39 @@
+# Reactome Disease-Pathway Mapping for Drug Repurposing
+# Format: disease_id	disease_name	pathway_id	pathway_name
+# Based on Reactome pathway annotations
+
+EFO_0000249	Alzheimer's disease	R-HSA-112316	NO-cGMP signaling
+EFO_0000249	Alzheimer's disease	R-HSA-9020597	Alzheimer's disease pathway
+EFO_0000249	Alzheimer's disease	R-HSA-5673001	Amyloid beta aggregation
+EFO_0000249	Alzheimer's disease	R-HSA-416476	Autophagy
+EFO_0000249	Alzheimer's disease	R-HSA-166663	Signaling by NOTCH
+EFO_0000249	Alzheimer's disease	R-HSA-196854	AMPK signaling
+EFO_0000249	Alzheimer's disease	R-HSA-416476	Autophagy
+
+EFO_0001379	Myocardial infarction	R-HSA-216083	Prostaglandin synthesis
+EFO_0001379	Myocardial infarction	R-HSA-158680	Platelet activation
+EFO_0001379	Myocardial infarction	R-HSA-109606	Hemostasis
+EFO_0001379	Myocardial infarction	R-HSA-196854	Integrin signaling
+
+EFO_0000305	Multiple myeloma	R-HSA-388841	Ubiquitin-mediated proteolysis
+EFO_0000305	Multiple myeloma	R-HSA-5673001	Protein ubiquitination
+EFO_0000305	Multiple myeloma	R-HSA-9020597	NF-kB signaling
+EFO_0000305	Multiple myeloma	R-HSA-198933	Immunoregulatory interactions
+
+EFO_0000729	Type 2 diabetes mellitus	R-HSA-166663	Insulin signaling
+EFO_0000729	Type 2 diabetes mellitus	R-HSA-196854	AMPK signaling
+EFO_0000729	Type 2 diabetes mellitus	R-HSA-416476	Glucose metabolism
+
+EFO_0003767	Parkinson's disease	R-HSA-9020597	Parkinson's disease pathway
+EFO_0003767	Parkinson's disease	R-HSA-5673001	Alpha-synuclein aggregation
+EFO_0003767	Parkinson's disease	R-HSA-166663	Mitochondrial function
+
+# Target-Pathway mappings (from Reactome/UniProt)
+# These map protein targets to pathways they participate in
+P23219	COX-1	R-HSA-216083	Prostaglandin synthesis
+P35354	COX-2	R-HSA-216083	Prostaglandin synthesis
+O76083	PDE5A	R-HSA-112316	NO-cGMP signaling
+Q13131	AMPK	R-HSA-196854	AMPK signaling
+Q96SW2	Cereblon	R-HSA-5673001	Ubiquitin-mediated proteolysis
+P23219	COX-1	R-HSA-158680	Platelet activation
+P35354	COX-2	R-HSA-158680	Platelet activation
