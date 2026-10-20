@@ -115,8 +115,10 @@ class ChEMBLParser:
         if "confidence_score" in activities.columns:
             activities = activities[activities["confidence_score"] >= self.config.confidence_threshold]
 
-        # Deduplicate by (drug_id, target_id) keeping highest confidence
-        seen = set()
+        # Deduplicate by (normalized_drug_id, normalized_target_uniprot) keeping highest confidence
+        # First, collect all valid interactions with their confidence scores
+        interactions_by_key = {}  # (drug_id, uniprot) -> (interaction, confidence)
+        
         for _, activity in activities.iterrows():
             molregno = str(activity.get("molregno", ""))
             tid = str(activity.get("tid", ""))
@@ -124,19 +126,62 @@ class ChEMBLParser:
                 continue
 
             compound = compound_lookup.get(molregno, {})
-            drug_id = compound.get("chembl_id", f"CHEMBL{molregno}")
-            target_id = tid
+            target = target_lookup.get(tid, {})
+            mechanism = mechanism_lookup.get((str(activity.get("molregno", "")), tid), {})
 
-            key = (drug_id, target_id)
-            if key in seen:
+            # Normalize drug ID: prefer ChEMBL ID, don't fabricate from molregno
+            drug_id = compound.get("chembl_id")
+            if not drug_id:
+                # Skip if no valid ChEMBL ID - we can't reliably identify this compound
+                logger.debug(f"Skipping activity with molregno={molregno}: no ChEMBL ID")
                 continue
-            seen.add(key)
+            drug_name = compound.get("pref_name", "") or drug_id
 
-            interaction = self._create_interaction(
-                activity, target_lookup, compound_lookup, mechanism_lookup
+            # Normalize target: use UniProt as canonical identifier
+            target_uniprot = target.get("uniprot", "")
+            if not target_uniprot:
+                # Skip if no UniProt - we can't reliably link to pathways
+                logger.debug(f"Skipping target tid={tid}: no UniProt accession")
+                continue
+            target_name = target.get("target_name", "") or tid
+            target_id = tid  # Keep original tid for reference
+
+            action_type = mechanism.get("action_type", "") or self._infer_action_type(activity)
+            mech_text = mechanism.get("mechanism", "") or ""
+
+            disease_id = mechanism.get("disease_effector", "") or ""
+            disease_name = self._map_disease_id(disease_id) if disease_id else target_name
+
+            confidence = float(activity.get("confidence_score", 0))
+
+            # Canonical key: (normalized_drug_id, target_uniprot)
+            canonical_key = (drug_id, target_uniprot)
+
+            # Create interaction object
+            interaction = DrugTargetInteraction(
+                drug_id=drug_id,
+                drug_name=drug_name,
+                target_id=target_id,
+                target_name=target_name,
+                target_uniprot=target_uniprot,
+                action_type=action_type,
+                mechanism=mech_text,
+                disease_id=disease_id,
+                disease_name=disease_name,
+                pathway_ids=[],  # Will be enriched later via pathway linker
+                pathway_names=[],
+                confidence_score=confidence,
+                source="chembl",
             )
-            if interaction:
-                yield interaction
+
+            # Keep highest confidence for each canonical key
+            existing = interactions_by_key.get(canonical_key)
+            if existing is None or confidence > existing[1]:
+                interactions_by_key[canonical_key] = (interaction, confidence)
+
+        # Yield deduplicated interactions
+        for interaction, _ in interactions_by_key.values():
+            yield interaction
 
     def _build_target_lookup(self, targets: pd.DataFrame, components: pd.DataFrame) -> dict:
         """Build target ID -> target info mapping."""

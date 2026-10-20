@@ -90,6 +90,9 @@ class TestGenerationEvaluator:
             citations=citations,
             citation_precision=1.0,
             hallucination_rate=0.0,
+            num_citations=2,
+            num_verified_citations=2,
+            num_unverified_citations=0,
         )
 
         metrics = evaluator.evaluate_answer(answer)

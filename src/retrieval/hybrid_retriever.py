@@ -48,11 +48,12 @@ class HybridRetriever:
         indexer: Optional[HybridIndexer] = None,
         embedder_model=None,
         settings=None,
+        citation_tracker: Optional[CitationTracker] = None,
     ):
         self.settings = settings or get_settings()
         self.indexer = indexer
         self.embedder_model = embedder_model or load_embedding_model(settings=self.settings)
-        self.citation_tracker = CitationTracker(
+        self.citation_tracker = citation_tracker or CitationTracker(
             citation_format=self.settings.generation.prompt.citation_format
         )
 
@@ -139,22 +140,32 @@ class HybridRetriever:
         results.sort(key=lambda x: x["rrf_score"], reverse=True)
         results = results[:top_k]
 
-        # Create RetrievalResult objects (no additional fetches needed for dense hits)
+        # Create RetrievalResult objects (batch fetch for sparse-only hits)
         final_results = []
+        
+        # Collect sparse-only doc_ids that need fetching
+        sparse_only_ids = [r["doc_id"] for r in results if not r["doc_text"]]
+        
+        # Batch fetch sparse-only documents from ChromaDB
+        sparse_lookup = {}
+        if sparse_only_ids and self.indexer.collection:
+            try:
+                fetched = self.indexer.collection.get(ids=sparse_only_ids, include=["documents", "metadatas"])
+                if fetched["documents"]:
+                    for doc_id, doc_text, meta in zip(fetched["ids"], fetched["documents"], fetched["metadatas"]):
+                        sparse_lookup[doc_id] = (doc_text, meta or {})
+            except Exception as e:
+                logger.warning(f"Failed to batch fetch sparse-only documents: {e}")
+
+        # Create RetrievalResult objects
         for result in results:
             doc_id = result["doc_id"]
             doc_text = result["doc_text"]
             metadata = result["metadata"]
 
-            # Only fetch from ChromaDB if not in dense results (sparse-only hit)
-            if not doc_text and self.indexer.collection:
-                try:
-                    fetched = self.indexer.collection.get(ids=[doc_id], include=["documents", "metadatas"])
-                    if fetched["documents"]:
-                        doc_text = fetched["documents"][0]
-                        metadata = fetched["metadatas"][0] or {}
-                except Exception as e:
-                    logger.warning(f"Failed to fetch document {doc_id}: {e}")
+            # Use batched fetch for sparse-only hits
+            if not doc_text and doc_id in sparse_lookup:
+                doc_text, metadata = sparse_lookup[doc_id]
 
             # Create citation
             chunk_data = {

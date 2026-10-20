@@ -60,7 +60,7 @@ class PathwayLinker:
         self._drug_interactions: Dict[str, List[DrugTargetInteraction]] = defaultdict(list)  # drug_id -> interactions
 
     def load_pathway_mapping(self) -> int:
-        """Load Reactome disease-pathway and target-pathway mappings from TSV."""
+        """Load Reactome disease-pathway and target-pathway mappings from TSV with explicit headers."""
         if not self.pathway_tsv.exists():
             logger.warning(f"Pathway mapping file not found: {self.pathway_tsv}")
             return 0
@@ -68,36 +68,67 @@ class PathwayLinker:
         count = 0
         with open(self.pathway_tsv, "r") as f:
             reader = csv.reader(f, delimiter="\t")
-            for row in reader:
-                if not row or row[0].startswith("#"):
+            header = None
+            for line_num, row in enumerate(reader, 1):
+                if not row:
+                    continue
+                if row[0].startswith("#"):
+                    # Check for explicit header: # entity_type	entity_id	entity_name	pathway_id	pathway_name
+                    if header is None:
+                        first_col = row[0].lstrip("#").strip()
+                        if first_col in ("entity_type", "entity_id"):
+                            # Parse header: # entity_type	entity_id	entity_name	pathway_id	pathway_name
+                            header = [col.strip() for col in row]
+                            continue
                     continue
 
-                if len(row) >= 4:
-                    disease_id, disease_name, pathway_id, pathway_name = row[:4]
+                if len(row) < 4:
+                    logger.warning(f"Line {line_num}: insufficient columns (expected >=4, got {len(row)}): {row}")
+                    continue
 
-                    # Disease -> pathway mapping
-                    if disease_id.startswith("EFO") or disease_id.startswith("MONDO") or disease_id.startswith("DOID"):
-                        self.graph.disease_pathways[disease_id].add(pathway_id)
-                        self.graph.pathway_names[pathway_id] = pathway_name
+                # Support both old format (4 cols) and new format (5 cols with entity_type)
+                if len(row) >= 5 and header:
+                    entity_type, entity_id, entity_name, pathway_id, pathway_name = row[:5]
+                elif len(row) >= 4:
+                    # Legacy format: infer entity type from ID prefix
+                    entity_id, entity_name, pathway_id, pathway_name = row[:4]
+                    entity_type = self._infer_entity_type(entity_id)
+                else:
+                    logger.warning(f"Line {line_num}: insufficient columns: {row}")
+                    continue
 
-                    # Target (UniProt) -> pathway mapping
-                    else:
-                        # Validate UniProt accession format
-                        if re.match(r'^[OPQ][0-9][A-Z0-9]{3}[0-9]$', disease_id) or \
-                           re.match(r'^[A-NR-Z][0-9](?:[A-Z][A-Z0-9]{2}[0-9]){1,2}$', disease_id):
-                            self.graph.target_pathways[disease_id].add(pathway_id)
-                            self.graph.target_names[disease_id] = disease_name
-                            self.graph.pathway_names[pathway_id] = pathway_name
-                        else:
-                            logger.warning(f"Skipping row with unrecognized ID format: {disease_id}")
+                if not entity_type or not entity_id or not pathway_id:
+                    logger.warning(f"Line {line_num}: missing required fields: {row}")
+                    continue
 
-                    count += 1
+                count += 1
+
+                if entity_type == "disease":
+                    self.graph.disease_pathways[entity_id].add(pathway_id)
+                    self.graph.pathway_names[pathway_id] = pathway_name
+                elif entity_type == "target":
+                    self.graph.target_pathways[entity_id].add(pathway_id)
+                    self.graph.target_names[entity_id] = entity_name
+                    self.graph.pathway_names[pathway_id] = pathway_name
+                else:
+                    logger.warning(f"Line {line_num}: unknown entity type '{entity_type}': {row}")
+                    continue
 
         logger.info(f"Loaded {count} pathway mappings")
         logger.info(f"  Diseases: {len(self.graph.disease_pathways)}")
         logger.info(f"  Targets: {len(self.graph.target_pathways)}")
         logger.info(f"  Pathways: {len(self.graph.pathway_names)}")
         return count
+
+    def _infer_entity_type(self, entity_id: str) -> str:
+        """Infer entity type from ID prefix (legacy support)."""
+        if entity_id.startswith(("EFO", "MONDO", "DOID", "HP", "ORPHA")):
+            return "disease"
+        if re.match(r'^[OPQ][0-9][A-Z0-9]{3}[0-9]$', entity_id) or \
+           re.match(r'^[A-NR-Z][0-9](?:[A-Z][A-Z0-9]{2}[0-9]){1,2}$', entity_id):
+            return "target"
+        logger.warning(f"Cannot infer entity type for ID: {entity_id}")
+        return "unknown"
 
     def load_interactions(self, interactions: List[DrugTargetInteraction]) -> None:
         """Load drug-target interactions for pathway-based linking."""

@@ -22,6 +22,10 @@ class SynthesizedAnswer:
     hallucination_rate: float = 0.0
     citation_precision: float = 1.0
     unverified_claims: List[str] = field(default_factory=list)
+    # Explicit metrics fields for evaluation
+    num_citations: int = 0
+    num_verified_citations: int = 0
+    num_unverified_citations: int = 0
 
 
 class AnswerSynthesizer:
@@ -86,9 +90,11 @@ class AnswerSynthesizer:
         retrieved_chunks: List[RetrievalResult],
     ) -> tuple:
         """Verify all citations exist in retrieved chunks."""
+        # Precompute lookup sets for O(1) citation verification
         available_pmids = set()
         available_chembls = set()
         available_doc_ids = set()
+        doc_id_to_chunk = {}
 
         for chunk in retrieved_chunks:
             meta = chunk.metadata
@@ -104,6 +110,7 @@ class AnswerSynthesizer:
             doc_id = chunk.doc_id
             if doc_id:
                 available_doc_ids.add(doc_id)
+                doc_id_to_chunk[doc_id] = chunk
 
         verified = []
         unverified = []
@@ -127,25 +134,37 @@ class AnswerSynthesizer:
         candidates = []
         # Match **Drug Name (ID)** or **Drug Name (ID)** with flexible formatting
         drug_pattern = re.compile(r'\*\*?([^*(]+?)\s*\(([^)]+)\)\*?')
+        
+        # Precompute lookup map for O(1) drug lookup
+        drug_name_to_chunk = {}
+        drug_id_to_chunk = {}
+        for chunk in chunks:
+            meta = chunk.metadata
+            drug_name = meta.get("drug_name")
+            drug_id = meta.get("drug_id")
+            if drug_name:
+                drug_name_to_chunk[drug_name.lower()] = chunk
+            if drug_id:
+                drug_id_to_chunk[drug_id] = chunk
+
         for match in drug_pattern.finditer(text):
             drug_name = match.group(1).strip()
             drug_id = match.group(2).strip()
-            # Find matching chunk for metadata
-            for chunk in chunks:
+            # Find matching chunk for metadata using precomputed lookup
+            chunk = drug_name_to_chunk.get(drug_name.lower()) or drug_id_to_chunk.get(drug_id)
+            if chunk:
                 meta = chunk.metadata
-                if meta.get("drug_name") == drug_name or meta.get("drug_id") == drug_id:
-                    candidates.append({
-                        "drug_name": drug_name,
-                        "drug_id": drug_id,
-                        "target_name": meta.get("target_name"),
-                        "target_id": meta.get("target_id"),
-                        "target_uniprot": meta.get("target_uniprot"),
-                        "action_type": meta.get("action_type"),
-                        "mechanism": meta.get("mechanism"),
-                        "disease_name": meta.get("disease_name"),
-                        "confidence_score": meta.get("confidence_score"),
-                    })
-                    break
+                candidates.append({
+                    "drug_name": drug_name,
+                    "drug_id": drug_id,
+                    "target_name": meta.get("target_name"),
+                    "target_id": meta.get("target_id"),
+                    "target_uniprot": meta.get("target_uniprot"),
+                    "action_type": meta.get("action_type"),
+                    "mechanism": meta.get("mechanism"),
+                    "disease_name": meta.get("disease_name"),
+                    "confidence_score": meta.get("confidence_score"),
+                })
         return candidates
 
     def synthesize(
@@ -180,18 +199,23 @@ class AnswerSynthesizer:
         citation_precision = len(verified) / total_citations if total_citations > 0 else 1.0
         hallucination_rate = len(unverified) / total_citations if total_citations > 0 else 0.0
 
-        # Build citation objects for verified ones
-        citation_map = {c.doc_id: c for chunk in retrieved_chunks for c in [chunk.citation] if c}
+        # Build citation lookup maps for O(1) lookup
+        pmid_to_citation = {}
+        drug_id_to_citation = {}
+        for chunk in retrieved_chunks:
+            cit = chunk.citation
+            if cit:
+                if cit.pmid:
+                    pmid_to_citation[cit.pmid] = cit
+                if cit.drug_id:
+                    drug_id_to_citation[cit.drug_id] = cit
+
         verified_citations = []
         for source, cid in verified:
-            # Find matching citation
-            for cit in citation_map.values():
-                if source == "PMID" and cit.pmid == cid:
-                    verified_citations.append(cit)
-                    break
-                elif source == "CHEMBL" and cit.drug_id == cid:
-                    verified_citations.append(cit)
-                    break
+            if source == "PMID" and cid in pmid_to_citation:
+                verified_citations.append(pmid_to_citation[cid])
+            elif source == "CHEMBL" and cid in drug_id_to_citation:
+                verified_citations.append(drug_id_to_citation[cid])
 
         # Extract drug candidates
         drug_candidates = self._extract_drug_candidates(answer_text, retrieved_chunks)
@@ -205,4 +229,7 @@ class AnswerSynthesizer:
             hallucination_rate=hallucination_rate,
             citation_precision=citation_precision,
             unverified_claims=unverified_claims,
+            num_citations=total_citations,
+            num_verified_citations=len(verified),
+            num_unverified_citations=len(unverified),
         )

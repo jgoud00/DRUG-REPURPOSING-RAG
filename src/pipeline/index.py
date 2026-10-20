@@ -32,7 +32,7 @@ def run_embedding(settings=None) -> int:
 
 
 def run_indexing(settings=None) -> int:
-    """Build hybrid index from corpus and embeddings."""
+    """Build hybrid index from corpus and embeddings (streaming)."""
     if settings is None:
         settings = get_settings()
 
@@ -51,16 +51,37 @@ def run_indexing(settings=None) -> int:
         logger.error(f"Embeddings not found: {emb_path}")
         return 0
 
-    # Load chunks
-    chunks = list(iter_jsonl_chunks(corpus_path))
-    embeddings = np.load(emb_path)
+    # Stream chunks and embeddings in batches
+    batch_size = settings.embedding.batch_size
+    chunks_iter = iter_jsonl_chunks(corpus_path)
+    embeddings_memmap = np.load(emb_path, mmap_mode='r')
 
-    if len(chunks) != len(embeddings):
-        logger.error(f"Chunk/embedding count mismatch: {len(chunks)} vs {len(embeddings)}")
+    if len(list(iter_jsonl_chunks(corpus_path))) != len(embeddings_memmap):
+        logger.error("Chunk/embedding count mismatch")
         return 0
 
-    # Index
-    indexer.index_chunks(chunks, embeddings)
+    # Re-iterate since we consumed the iterator
+    chunks_iter = iter_jsonl_chunks(corpus_path)
+    embeddings_memmap = np.load(emb_path, mmap_mode='r')
+
+    batch_chunks = []
+    batch_embeddings = []
+    total_indexed = 0
+
+    for idx, chunk in enumerate(chunks_iter):
+        batch_chunks.append(chunk)
+        batch_embeddings.append(embeddings_memmap[idx])
+
+        if len(batch_chunks) >= settings.embedding.batch_size:
+            indexer.index_chunks(batch_chunks, np.array(batch_embeddings))
+            total_indexed += len(batch_chunks)
+            batch_chunks = []
+            batch_embeddings = []
+
+    # Final batch
+    if batch_chunks:
+        indexer.index_chunks(batch_chunks, np.array(batch_embeddings))
+        total_indexed += len(batch_chunks)
 
     stats = indexer.get_collection_stats()
     logger.info(f"Index stats: {stats}")

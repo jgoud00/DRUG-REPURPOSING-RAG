@@ -2,6 +2,7 @@
 
 import hashlib
 import logging
+import threading
 from abc import ABC, abstractmethod
 from typing import List, Optional
 
@@ -11,6 +12,9 @@ from sentence_transformers import SentenceTransformer
 from src.config import get_settings
 
 logger = logging.getLogger(__name__)
+
+# Global lock for thread-safe model loading
+_model_load_lock = threading.Lock()
 
 
 class EmbeddingModel(ABC):
@@ -67,6 +71,7 @@ class SentenceTransformerEmbeddingModel(EmbeddingModel):
         self.cache_dir = cache_dir
         self.normalize_embeddings = normalize_embeddings
         self._model: Optional[SentenceTransformer] = None
+        self._model_lock = threading.Lock()
 
     def _resolve_device(self, device: str) -> str:
         if device == "auto":
@@ -77,12 +82,14 @@ class SentenceTransformerEmbeddingModel(EmbeddingModel):
     @property
     def model(self) -> SentenceTransformer:
         if self._model is None:
-            logger.info(f"Loading embedding model: {self.model_name} on {self.device}")
-            self._model = SentenceTransformer(
-                self.model_name,
-                device=self.device,
-                cache_folder=self.cache_dir,
-            )
+            with self._model_lock:
+                if self._model is None:
+                    logger.info(f"Loading embedding model: {self.model_name} on {self.device}")
+                    self._model = SentenceTransformer(
+                        self.model_name,
+                        device=self.device,
+                        cache_folder=self.cache_dir,
+                    )
         return self._model
 
     def encode(self, texts: List[str], batch_size: int = 32, show_progress_bar: bool = False) -> np.ndarray:

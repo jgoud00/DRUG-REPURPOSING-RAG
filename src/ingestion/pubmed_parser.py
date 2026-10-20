@@ -46,9 +46,27 @@ class PubMedParser:
     def __init__(self, settings=None):
         self.settings = settings or get_settings()
         self.config = self.settings.ingestion.pubmed
+        self._parse_stats = {"parsed": 0, "skipped": 0, "failed": 0}
+
+    def reset_stats(self):
+        """Reset parsing statistics."""
+        self._parse_stats = {"parsed": 0, "skipped": 0, "failed": 0}
+
+    def get_stats(self) -> dict:
+        """Get parsing statistics."""
+        return self._parse_stats.copy()
+
+    def log_summary(self):
+        """Log ingestion summary."""
+        stats = self.get_stats()
+        logger.info(
+            f"PubMed ingestion summary: parsed={stats['parsed']}, "
+            f"skipped={stats['skipped']}, failed={stats['failed']}"
+        )
 
     def parse_xml_file(self, filepath: Path) -> Iterator[PubMedAbstract]:
         """Parse a PubMed XML file (single or multiple records)."""
+        self.reset_stats()
         logger.info(f"Parsing PubMed XML: {filepath}")
         tree = ET.parse(filepath)
         root = tree.getroot()
@@ -61,10 +79,18 @@ class PubMedParser:
         for article in articles:
             abstract = self._parse_article_xml(article)
             if abstract and self._validate_abstract(abstract):
+                self._parse_stats["parsed"] += 1
                 yield abstract
+            elif abstract is not None:
+                self._parse_stats["skipped"] += 1
+            else:
+                self._parse_stats["failed"] += 1
+
+        self.log_summary()
 
     def parse_json_file(self, filepath: Path) -> Iterator[PubMedAbstract]:
         """Parse a PubMed JSON file (array of articles or single article)."""
+        self.reset_stats()
         logger.info(f"Parsing PubMed JSON: {filepath}")
         with open(filepath, "r", encoding="utf-8") as f:
             data = json.load(f)
@@ -74,7 +100,14 @@ class PubMedParser:
         for article in articles:
             abstract = self._parse_article_json(article)
             if abstract and self._validate_abstract(abstract):
+                self._parse_stats["parsed"] += 1
                 yield abstract
+            elif abstract is not None:
+                self._parse_stats["skipped"] += 1
+            else:
+                self._parse_stats["failed"] += 1
+
+        self.log_summary()
 
     def parse_directory(self, directory: Path, pattern: str = "*.xml") -> Iterator[PubMedAbstract]:
         """Parse all matching files in a directory."""
@@ -147,6 +180,9 @@ class PubMedParser:
                 doi=doi,
                 keywords=keywords,
             )
+        except ET.ParseError as e:
+            logger.warning(f"XML parse error in article: {e}")
+            return None
         except Exception as e:
             logger.warning(f"Failed to parse article: {e}")
             return None
@@ -225,6 +261,9 @@ class PubMedParser:
                 doi=doi,
                 keywords=keywords,
             )
+        except (KeyError, ValueError, TypeError) as e:
+            logger.warning(f"JSON article missing required field: {e}")
+            return None
         except Exception as e:
             logger.warning(f"Failed to parse JSON article: {e}")
             return None

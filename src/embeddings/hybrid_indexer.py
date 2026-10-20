@@ -3,6 +3,7 @@
 import logging
 import pickle
 import re
+from collections import defaultdict
 from pathlib import Path
 from typing import List, Dict, Any, Optional, Tuple
 
@@ -96,52 +97,76 @@ class HybridIndexer:
         self,
         chunks: List[Dict[str, Any]],
         embeddings: np.ndarray,
+        batch_size: Optional[int] = None,
     ) -> None:
         """Index chunks with their embeddings (upsert for idempotency)."""
         if self.collection is None:
             self.initialize()
 
-        # Prepare data for ChromaDB
-        ids = [chunk["doc_id"] for chunk in chunks]
-        documents = [chunk["text"] for chunk in chunks]
-        metadatas = []
+        batch_size = batch_size or self.settings.embedding.batch_size
 
-        for chunk in chunks:
-            meta = chunk.get("metadata", {}).copy()
-            # Ensure all metadata values are ChromaDB-compatible (no lists)
-            clean_meta = {}
-            for k, v in meta.items():
-                if isinstance(v, list):
-                    clean_meta[k] = ",".join(str(x) for x in v if x)
-                elif v is None:
-                    clean_meta[k] = ""
-                else:
-                    clean_meta[k] = str(v)
-            # Preserve source from metadata if present, otherwise from chunk
-            if "source" not in clean_meta:
-                clean_meta["source"] = chunk.get("source", "unknown")
-            metadatas.append(clean_meta)
+        # Load existing BM25 tokenized corpus if it exists
+        existing_tokenized = {}
+        if self._bm25_path.exists():
+            try:
+                with open(self._bm25_path, "rb") as f:
+                    data = pickle.load(f)
+                existing_tokenized = {doc_id: tokens for doc_id, tokens in zip(data["doc_ids"], data["bm25"].corpus)}
+                self.bm25_doc_ids = data["doc_ids"]
+                logger.info(f"Loaded existing BM25 index with {len(self.bm25_doc_ids)} documents")
+            except Exception as e:
+                logger.warning(f"Failed to load existing BM25 index: {e}")
 
-        # Upsert to ChromaDB (idempotent)
-        self.collection.upsert(
-            ids=ids,
-            documents=documents,
-            embeddings=embeddings.tolist(),
-            metadatas=metadatas,
-        )
-        logger.info(f"Upserted {len(ids)} chunks to ChromaDB")
+        # Process in batches for ChromaDB upsert
+        total_chunks = len(chunks)
+        for i in range(0, total_chunks, batch_size):
+            batch_chunks = chunks[i:i + batch_size]
+            batch_embeddings = embeddings[i:i + batch_size]
 
-        # Build BM25 index
-        tokenized_corpus = self.tokenizer.tokenize_corpus(documents)
-        sparse_config = self.settings.vector_store.sparse
-        self.bm25 = BM25Okapi(
-            tokenized_corpus,
-            k1=sparse_config.get("k1", 1.2),
-            b=sparse_config.get("b", 0.75),
-        )
-        self.bm25_doc_ids = ids
-        self.save_bm25_index()
-        logger.info(f"Built BM25 index with {len(ids)} documents")
+            ids = [chunk["doc_id"] for chunk in batch_chunks]
+            documents = [chunk["text"] for chunk in batch_chunks]
+            metadatas = []
+
+            for chunk in batch_chunks:
+                meta = chunk.get("metadata", {}).copy()
+                clean_meta = {}
+                for k, v in meta.items():
+                    if isinstance(v, list):
+                        clean_meta[k] = ",".join(str(x) for x in v if x)
+                    elif v is None:
+                        clean_meta[k] = ""
+                    else:
+                        clean_meta[k] = str(v)
+                if "source" not in clean_meta:
+                    clean_meta["source"] = chunk.get("source", "unknown")
+                metadatas.append(clean_meta)
+
+            self.collection.upsert(
+                ids=ids,
+                documents=documents,
+                embeddings=batch_embeddings.tolist(),
+                metadatas=metadatas,
+            )
+
+            # Accumulate tokenized documents for BM25
+            for doc_id, doc_text in zip(ids, documents):
+                tokens = self.tokenizer.tokenize(doc_text)
+                existing_tokenized[doc_id] = tokens
+
+            logger.info(f"Upserted batch {i // batch_size + 1}/{(total_chunks + batch_size - 1) // batch_size} ({len(ids)} chunks) to ChromaDB")
+
+        # Rebuild BM25 index from all tokenized documents
+        if existing_tokenized:
+            self.bm25_doc_ids = list(existing_tokenized.keys())
+            tokenized_corpus = list(existing_tokenized.values())
+            sparse_config = self.settings.vector_store.sparse
+            self.bm25 = BM25Okapi(
+                tokenized_corpus,
+                k1=sparse_config.get("k1", 1.2),
+                b=sparse_config.get("b", 0.75),
+            )
+            self.save_bm25_index()
+            logger.info(f"Built BM25 index with {len(self.bm25_doc_ids)} documents")
 
     def index_from_files(
         self,

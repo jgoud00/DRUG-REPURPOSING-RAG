@@ -31,11 +31,58 @@ class Chunk:
 # Simple regex-based sentence splitter (no spaCy dependency)
 _SENTENCE_END = re.compile(r'(?<=[.!?])\s+(?=[A-Z])')
 
+# Common biomedical abbreviations that should not end sentences
+_BIOMEDICAL_ABBREVIATIONS = {
+    'fig', 'fig.', 'et al', 'et al.', 'etc', 'etc.', 'vs', 'vs.', 'dr', 'dr.',
+    'prof', 'prof.', 'mr', 'mr.', 'ms', 'ms.', 'mrs', 'mrs.', 'jr', 'jr.',
+    'sr', 'sr.', 'phd', 'md', 'md.', 'ba', 'bs', 'ms', 'ph.d', 'ph.d.',
+    'e.g', 'e.g.', 'i.e', 'i.e.', 'cf', 'cf.', 'vs', 'vs.', 'viz', 'viz.',
+    'approx', 'approx.', 'ca', 'ca.', 'esp', 'esp.', 'ie', 'ie.', 'eg', 'eg.',
+    'etal', 'et al', 'et al.', 'fig', 'fig.', 'figs', 'figs.', 'tab', 'tab.',
+    'tabs', 'tabs.', 'ref', 'ref.', 'refs', 'refs.', 'suppl', 'suppl.',
+    'vol', 'vol.', 'vols', 'vols.', 'no', 'no.', 'pp', 'pp.', 'p', 'p.',
+    'ch', 'ch.', 'chpt', 'chpt.', 'sec', 'sec.', 'eq', 'eq.', 'eqs', 'eqs.',
+    'fig', 'fig.', 'figs', 'figs.', 'table', 'table.', 'tables', 'tables.',
+    'appendix', 'append.', 'fig.', 'figs.', 'eq.', 'eqs.', 'sec.', 'secs.',
+    'jan', 'feb', 'mar', 'apr', 'jun', 'jul', 'aug', 'sep', 'sept', 'oct', 'nov', 'dec',
+    'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun',
+    'mrna', 'dna', 'rna', 'cdna', 'pcr', 'rt-pcr', 'qpcr', 'dna', 'rna',
+    'cdna', 'pcr', 'rna', 'dna', 'cdna', 'pcr', 'qpcr', 'rt-pcr',
+    'orf', 'utr', 'cds', 'utr', 'snv', 'indel', 'cnv', 'snp', 'gwas',
+    'chr', 'chr.', 'kb', 'mb', 'gb', 'ml', 'ul', 'nl', 'mg', 'ug', 'ng',
+    'pg', 'mg', 'mcg', 'mm', 'cm', 'm', 'km', 'hz', 'khz', 'mhz', 'ghz',
+    'ms', 'us', 'ns', 'min', 'hr', 'hr.', 'sec', 'sec.', 'yr', 'yr.', 'mo', 'wk', 'd',
+    'n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw', 'dr', 'dr.', 'prof', 'prof.',
+    'mr', 'mr.', 'ms', 'ms.', 'mrs', 'mrs.', 'jr', 'jr.', 'sr', 'sr.',
+    'ph.d', 'm.d', 'b.s', 'm.s', 'b.a', 'm.a', 'ph.d.', 'm.d.', 'b.s.', 'm.s.',
+    'b.a.', 'm.a.', 'e.g', 'e.g.', 'i.e', 'i.e.', 'cf', 'cf.', 'viz', 'viz.',
+    'approx', 'approx.', 'ca', 'ca.', 'esp', 'esp.', 'et al', 'et al.',
+    'fig', 'fig.', 'figs', 'figs.', 'table', 'table.', 'tables', 'tables.',
+    'ref', 'ref.', 'refs', 'refs.', 'vol', 'vol.', 'vols', 'vols.',
+    'no', 'no.', 'pp', 'pp.', 'p', 'p.', 'ch', 'ch.', 'chpt', 'chpt.',
+    'sec', 'sec.', 'eq', 'eq.', 'eqs', 'eqs.', 'fig', 'fig.', 'figs',
+    'figs.', 'table', 'table.', 'tables', 'tables.', 'appendix', 'append.',
+    'appendices', 'append.', 'eq.', 'eqs.', 'sec.', 'secs.', 'cf.', 'cf',
+    'etal', 'et al', 'et al.', 'approx', 'approx.', 'ca', 'ca.',
+    'mrna', 'sirna', 'mirna', 'lncrna', 'pirna', 'snrna', 'snrnas',
+    'hr', 'hr.', 'min', 'min.', 'sec', 'sec.', 'ms', 'ms.', 'us', 'ns',
+    'kv', 'mv', 'ma', 'ma.', 'pa', 'pa.', 'ka', 'ka.', 'da', 'da.',
+    'ua', 'ua.', 'ra', 'ra.', 'dec', 'jan', 'feb', 'mar', 'apr', 'jun',
+    'jul', 'aug', 'sep', 'sept', 'oct', 'nov', 'dec',
+}
+
+# Compile abbreviation patterns for efficient replacement
+_ABBREV_PATTERNS = {abbr: abbr.replace('.', '<DOT>') for abbr in _BIOMEDICAL_ABBREVIATIONS if '.' in abbr}
+_ABBREV_REGEX = re.compile(r'\b(' + '|'.join(re.escape(abbr) for abbr in _ABBREV_PATTERNS.keys()) + r')\b', re.IGNORECASE)
+
 
 def split_sentences(text: str) -> list[str]:
     """Split text into sentences using regex (fast, no ML deps)."""
     # Handle common abbreviations to avoid over-splitting
-    text = re.sub(r'\b(?:Fig|fig|et al|etc|vs|Dr|Prof|Mr|Ms)\.', lambda m: m.group(0).replace('.', '<DOT>'), text)
+    def replace_abbrev(match):
+        return _ABBREV_PATTERNS.get(match.group(0).lower(), match.group(0))
+
+    text = _ABBREV_REGEX.sub(replace_abbrev, text)
     sentences = _SENTENCE_END.split(text)
     # Restore dots in abbreviations
     sentences = [s.replace('<DOT>', '.').strip() for s in sentences if s.strip()]
@@ -167,8 +214,50 @@ class SemanticChunker:
         return ",".join(str(x) for x in items if x)
 
     def _extract_entities(self, text: str) -> list[str]:
-        """Extract biomedical entities (simple regex-based for MVP)."""
+        """Extract biomedical entities (improved regex-based for MVP)."""
         entities = []
+
+        # Gene/protein symbols (e.g., EGFR, TP53, COX-1, mTORC1)
+        # Matches: 2-6 uppercase alphanumeric, optionally with hyphen-digit suffix
+        gene_pattern = r'\b[A-Z][A-Z0-9]{1,5}(?:-\d+)?\b'
+        entities.extend(re.findall(gene_pattern, text))
+
+        # Protein complexes (e.g., mTORC1, mTORC2, NF-kB, NF-κB, IKK, PI3K, AKT, mTOR)
+        complex_pattern = r'\b(?:mTORC[12]|NF[-\u03ba]B|NF-kB|I[KK]{1,2}|PI3K|AKT|mTOR|AMPK|MAPK|ERK|JNK|p38|STAT[1-6]|SMAD[1-9]|SOX[0-9]|OCT4|NANOG|KLF4|MYC|TP53|BRCA[12]|PTEN|ATM|ATR|CHEK[12]|CDK[1-9]|CYCLIN[A-E]|RB|E2F|MYC|RAS|RAF|MEK|ERK|JNK|p38|IKK|NFKB|RELA|RELB|REL|IKB|IKBA|IKBB|IKBE|IKBG|NEMO|TRAF|TRADD|FADD|CASP[389]|APAF|BAX|BAK|BCL2|BCLXL|MCL1|BID|BAD|BIM|PUMA|NOXA|BH3|APOPTOSIS|AUTOPHAGY|ULK|ATG|LC3|BECLIN|VPS34|AMBRA|RUBICON|UVRAG)\b'
+        entities.extend(re.findall(complex_pattern, text, re.IGNORECASE))
+
+        # ChEMBL IDs
+        chembl_pattern = r'CHEMBL\d+'
+        entities.extend(re.findall(chembl_pattern, text))
+
+        # UniProt IDs (accession format: P12345, Q9XYZ0, A0A0B4, A0A1B2C3D4)
+        uniprot_pattern = r'\b[OPQ][0-9][A-Z0-9]{3}[0-9]\b|\b[A-NR-Z][0-9](?:[A-Z][A-Z0-9]{2}[0-9]){1,2}\b|\bA0A[0-9A-Z]{6}\b'
+        entities.extend(re.findall(uniprot_pattern, text))
+
+        # rs identifiers (dbSNP)
+        rs_pattern = r'rs\d+'
+        entities.extend(re.findall(rs_pattern, text, re.IGNORECASE))
+
+        # miRNAs (e.g., miR-21, miR-155, let-7, miR-146a)
+        mirna_pattern = r'\b(?:miR|let|mir|lin|bantam|mirtron|miRNA)-?\d+[a-z]?\b'
+        entities.extend(re.findall(mirna_pattern, text, re.IGNORECASE))
+
+        # Common chemical/drug names
+        drug_names = [
+            'Aspirin', 'Ibuprofen', 'Acetaminophen', 'Paracetamol', 'Metformin',
+            'Sildenafil', 'Thalidomide', 'Lenalidomide', 'Pomalidomide',
+            'Rofecoxib', 'Celecoxib', 'Warfarin', 'Heparin', 'Insulin',
+            'Morphine', 'Fentanyl', 'Codeine', 'Oxycodone', 'Tramadol',
+            'Duloxetine', 'Venlafaxine', 'Bupropion', 'Mirtazapine',
+            'Quetiapine', 'Olanzapine', 'Risperidone', 'Aripiprazole',
+            'Clozapine', 'Haloperidol', 'Lithium', 'Valproate',
+            'Carbamazepine', 'Lamotrigine', 'Topiramate', 'Levetiracetam',
+            'Phenytoin', 'Valproate', 'Gabapentin', 'Pregabalin',
+            'Modafinil', 'Armodafinil', 'Methylphenidate', 'Atomoxetine'
+        ]
+        for drug in drug_names:
+            if re.search(rf'\b{re.escape(drug)}\b', text, re.IGNORECASE):
+                entities.append(drug)
 
         # Gene/protein symbols (e.g., EGFR, TP53, COX-1)
         gene_pattern = r'\b[A-Z][A-Z0-9]{1,5}(?:-\d+)?\b'
@@ -178,12 +267,35 @@ class SemanticChunker:
         chembl_pattern = r'CHEMBL\d+'
         entities.extend(re.findall(chembl_pattern, text))
 
-        # UniProt IDs (accession format: P12345, Q9XYZ0, A0A0B4)
-        uniprot_pattern = r'\b[OPQ][0-9][A-Z0-9]{3}[0-9]\b|\b[A-NR-Z][0-9](?:[A-Z][A-Z0-9]{2}[0-9]){1,2}\b'
+        # UniProt IDs (accession format: P12345, Q9XYZ0, A0A0B4, A0A1B2C3D4)
+        uniprot_pattern = r'\b[OPQ][0-9][A-Z0-9]{3}[0-9]\b|\b[A-NR-Z][0-9](?:[A-Z][A-Z0-9]{2}[0-9]){1,2}\b|\bA0A[0-9A-Z]{6}\b'
         entities.extend(re.findall(uniprot_pattern, text))
 
-        # Drug names (simple heuristic - capitalized words)
-        # This is a placeholder; real NER would be better
+        # rs identifiers (dbSNP)
+        rs_pattern = r'rs\d+'
+        entities.extend(re.findall(rs_pattern, text, re.IGNORECASE))
+
+        # miRNAs (e.g., miR-21, miR-155, let-7, miR-146a)
+        mirna_pattern = r'\b(?:miR|let|mir|lin|bantam|mirtron|miRNA)-?\d+[a-z]?\b'
+        entities.extend(re.findall(mirna_pattern, text, re.IGNORECASE))
+
+        # Common chemical/drug names
+        drug_names = [
+            'Aspirin', 'Ibuprofen', 'Acetaminophen', 'Paracetamol', 'Metformin',
+            'Sildenafil', 'Thalidomide', 'Lenalidomide', 'Pomalidomide',
+            'Rofecoxib', 'Celecoxib', 'Warfarin', 'Heparin', 'Insulin',
+            'Morphine', 'Fentanyl', 'Codeine', 'Oxycodone', 'Tramadol',
+            'Duloxetine', 'Venlafaxine', 'Bupropion', 'Mirtazapine',
+            'Quetiapine', 'Olanzapine', 'Risperidone', 'Aripiprazole',
+            'Clozapine', 'Haloperidol', 'Lithium', 'Valproate',
+            'Carbamazepine', 'Lamotrigine', 'Topiramate', 'Levetiracetam',
+            'Phenytoin', 'Valproate', 'Gabapentin', 'Pregabalin',
+            'Modafinil', 'Armodafinil', 'Methylphenidate', 'Atomoxetine'
+        ]
+        for drug in drug_names:
+            if re.search(rf'\b{re.escape(drug)}\b', text, re.IGNORECASE):
+                entities.append(drug)
+
         return list(set(entities))
 
 
